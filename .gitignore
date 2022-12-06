@@ -1,0 +1,5 @@
+*csv
+*classes/
+*npy
+*.ipynb
+__pycache__
