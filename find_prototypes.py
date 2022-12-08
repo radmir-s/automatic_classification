@@ -15,8 +15,8 @@ parser.add_argument('-d', '--train-dir' , required=True)
 parser.add_argument('-c', '--class-num' , required=True)
 parser.add_argument('-p', '--prot-perc',type=float, default=0.01)
 parser.add_argument('-r', '--ran-init',type=float, default=0.05)
-parser.add_argument('-q', '--haus-quants', nargs='*', type=float, default=[0.35, 0.55 ,0.75, 0.95])
-parser.add_argument('-w', '--haus-weights', nargs='*')
+parser.add_argument('-q', '--haus-quants', nargs='*', type=float)
+parser.add_argument('-w', '--haus-weights', nargs='*', type=float)
 
 args = parser.parse_args()
 
@@ -27,22 +27,26 @@ ran_init = args.ran_init
 cls_n = args.class_num
 train_dir = args.train_dir
 haus_q = args.haus_quants
+haus_w = args.haus_weights
 prot_perc = args.prot_perc
 
 info = {}
 
 ###################### DISTANCES TO RANDOM SHAPES WITHIN CLASSES  ######################
 
-if args.haus_weights is None or args.haus_weights[0] == 'auto':
-    haus_q = sorted([0.]+haus_q+[1.])
-    int_q = np.diff(haus_q)
-    haus_w = np.zeros_like(haus_q)
-    haus_w[1:] += int_q/2
-    haus_w[:-1] += int_q/2
-elif args.haus_weights[0] == 'equal':
+if haus_q is None and haus_w is None:
+    haus_q = np.linspace(0,1,11)
+    haus_w = np.ones_like(haus_q, dtype=float)
+    haus_w[0] = 0.5
+    haus_w[-1] = 0.5
+
+elif haus_q and haus_w is None:
+    haus_q = np.array(haus_q)
     haus_w = np.ones_like(haus_q)/len(haus_q)
-else:
-    haus_w = np.array(args.haus_weights)
+
+elif haus_q and haus_w:
+    haus_q = np.array(haus_q)
+    haus_w = np.array(haus_w)
 
 assert len(haus_q) == len(haus_w), \
     "Quantiles and weights should have same length"
