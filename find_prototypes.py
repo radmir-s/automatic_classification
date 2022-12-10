@@ -127,7 +127,7 @@ dfc = df.iloc[center_shapes].shapes
 prototypes_csv_path = f'prototypes_{cls_n}_{n_clust}.csv'
 
 dfc.to_csv(prototypes_csv_path)
-info['prototypes'] = dfc.shapes.to_list()
+info['prototypes'] = dfc.to_list()
 info['prototypes_csv_path'] = prototypes_csv_path
 
 with open('info_{cls_n}.json', 'w') as fp:
