@@ -14,13 +14,16 @@ parser = argparse.ArgumentParser()
 parser.add_argument('-d', '--train-dir' , required=True)
 parser.add_argument('-q', '--haus-quants', nargs='*', type=float)
 parser.add_argument('-w', '--haus-weights', nargs='*', type=float)
-parser.add_argument('-n', '--num-workers', type=int, default=4)
+parser.add_argument('-n', '--num-workers', type=int)
+parser.add_argument('-c', '--chunk-size', type=int)
 
 args = parser.parse_args()
+# print(args)
 train_dir = args.train_dir
 haus_q = args.haus_quants
 haus_w = args.haus_weights
-n_workers = args.num_workers
+n_workers = args.num_workers if args.num_workers else (mp.cpu_count()-2)
+chunk_size = args.chunk_size if args.chunk_size else 5
 
 if haus_q is None and haus_w is None:
     haus_q = np.linspace(0,1,11)
@@ -64,7 +67,7 @@ for cls in classes:
     df = pd.read_csv(prototypes_csv_path)
     protos.extend(df.shapes.to_list())
 
-pairs = tuple(product(shape_path.keys(), protos))[:10]
+pairs = tuple(product(shape_path.keys(), protos))#[:10]
 arrays = {shape:loadshape(sh_path) for shape, sh_path in shape_path.items()}
 array_pairs = tuple((arrays[s1], arrays[s2]) for s1, s2 in pairs)
 
@@ -74,7 +77,7 @@ def dist(s1, s2):
 if __name__ == '__main__':
     mp.freeze_support()
     with mp.Pool(n_workers) as pool:
-        results = pool.starmap(dist, array_pairs, chunksize=2)
+        results = pool.starmap(dist, array_pairs, chunksize=chunk_size)
 
     shapes_, protos_ = list(zip(*pairs))
     shape_classes_ = [shape_class[shape] for shape in shapes_]
