@@ -48,6 +48,9 @@ elif haus_q and haus_w:
     haus_q = np.array(haus_q)
     haus_w = np.array(haus_w)
 
+haus_q = np.round(haus_q,2)
+haus_w = np.round(haus_w,2)
+
 assert len(haus_q) == len(haus_w), \
     "Quantiles and weights should have same length"
 
@@ -90,7 +93,6 @@ dfm = pd.DataFrame(more_data)
 df.sort_values('shapes').reset_index(drop=True)
 dfm.sort_values('shapes').reset_index(drop=True)
 
-
 distances_csv_path = f'distances_random_{cls_n}_{ran_num}.csv'
 distances_csv_path_more = f'distances_random_{cls_n}_{ran_num}_more.csv'
 
@@ -125,6 +127,7 @@ dfc = df.iloc[center_shapes].shapes
 prototypes_csv_path = f'prototypes_{cls_n}_{n_clust}.csv'
 
 dfc.to_csv(prototypes_csv_path)
+info['prototypes'] = dfc.shapes.to_list()
 info['prototypes_csv_path'] = prototypes_csv_path
 
 with open('info_{cls_n}.json', 'w') as fp:
