@@ -11,7 +11,8 @@ import json
 import time
 
 parser = argparse.ArgumentParser()
-parser.add_argument('-d', '--train-dir' , required=True)
+parser.add_argument('-d', '--all-dir' , required=True)
+parser.add_argument('-p', '--proto-csv' , required=True)
 parser.add_argument('-q', '--haus-quants', nargs='*', type=float)
 parser.add_argument('-w', '--haus-weights', nargs='*', type=float)
 parser.add_argument('-n', '--num-workers', type=int)
@@ -19,7 +20,8 @@ parser.add_argument('-c', '--chunk-size', type=int)
 
 args = parser.parse_args()
 # print(args)
-train_dir = args.train_dir
+all_dir = args.all_dir
+proto_csv_path = args.proto_csv
 haus_q = args.haus_quants
 haus_w = args.haus_weights
 n_workers = args.num_workers if args.num_workers else (mp.cpu_count()-2)
@@ -45,30 +47,26 @@ haus_w = np.round(haus_w,2)
 assert len(haus_q) == len(haus_w), \
     "Quantiles and weights should have same length"
 
-classes = os.listdir(train_dir)
+classes = os.listdir(all_dir)
 
 # S = dict() # shape arrays
 shape_class = dict()
 shape_path = dict()
 
 for cls in classes:
-    class_dir = os.path.join(train_dir, cls)
+    class_dir = os.path.join(all_dir, cls)
     matfiles = [file for file in os.listdir(class_dir) if file.endswith('.mat')]
     for file in matfiles:
-        shape = file.replace('.mat','')
+        shape = file.removesuffix('.mat').removeprefix('shape_')
         shape_path[shape] = os.path.join(class_dir, file)
         shape_class[shape] = cls
 
-protos = list()
-for cls in classes:
-    with open(f'./info_{cls}.json', 'r') as fp:
-        info = json.load(fp)
-    prototypes_csv_path = info['prototypes_csv_path']
-    df = pd.read_csv(prototypes_csv_path)
-    protos.extend(df.shapes.to_list())
+dfp = pd.read_csv(proto_csv_path)
+proto_paths = {shape: shp for shape, shp in zip(dfp['shape'].values, dfp.path.values)}
 
-pairs = tuple(product(shape_path.keys(), protos))#[:10]
+pairs = tuple(product(shape_path.keys(), proto_paths.keys()))
 arrays = {shape:loadshape(sh_path) for shape, sh_path in shape_path.items()}
+arrays.update({shape:loadshape(sh_path) for shape, sh_path in proto_paths.items()})
 array_pairs = tuple((arrays[s1], arrays[s2]) for s1, s2 in pairs)
 
 def dist(s1, s2):
