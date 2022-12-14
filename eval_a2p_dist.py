@@ -47,7 +47,7 @@ haus_w = np.round(haus_w,2)
 assert len(haus_q) == len(haus_w), \
     "Quantiles and weights should have same length"
 
-classes = os.listdir(all_dir)
+classes = [dir for dir in os.listdir(all_dir) if os.path.isdir(dir)]
 
 # S = dict() # shape arrays
 shape_class = dict()
