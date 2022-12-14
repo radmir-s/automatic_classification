@@ -72,7 +72,7 @@ proto_arrays = {shape:loadshape(sh_path) for shape, sh_path in proto_paths.items
 arrays.update(proto_arrays)
 shape_class.update(proto_class)
 
-pairs = tuple(product(shape_paths.keys(), proto_paths.keys()))[:100]
+pairs = tuple(product(shape_paths.keys(), proto_paths.keys()))
 array_pairs = tuple((arrays[s1], arrays[s2]) for s1, s2 in pairs)
 
 def dist(s1, s2):
