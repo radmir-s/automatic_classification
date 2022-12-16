@@ -1,3 +1,4 @@
+reports/
 *csv
 *classes/
 *npy
@@ -6,3 +7,4 @@ __pycache__
 *.json
 test.py
 data/
+*.DS_Store*
