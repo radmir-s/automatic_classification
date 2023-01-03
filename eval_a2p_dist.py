@@ -62,9 +62,9 @@ shape_class = dict()
 
 for cls in classes:
     class_dir = os.path.join(all_dir, cls)
-    matfiles = [file for file in os.listdir(class_dir) if file.endswith('.mat')]
+    matfiles = [file for file in os.listdir(class_dir) if (file.endswith('.mat') and file.startswith('shapes_'))]
     for file in matfiles:
-        shape = file.removesuffix('.mat').removeprefix('shape_')
+        shape = file.removesuffix('.mat').removeprefix('shapes_')
         shape_paths[shape] = os.path.join(class_dir, file)
         shape_class[shape] = cls
 
