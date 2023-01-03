@@ -72,7 +72,7 @@ arrays = {shape:loadshape(sh_path, res=resol) for shape, sh_path in shape_paths.
 
 dfp = pd.read_csv(proto_csv_path)
 proto_paths = {shape: shp for shape, shp in zip(dfp['shape'].values, dfp['path'].values)}
-proto_class = {shape: cls for shape, cls in zip(dfp['shape'].values, dfp['class'].values)}
+proto_class = {shape: cls for shape, cls in zip(dfp['shape'].values, dfp['class_'].values)}
 proto_arrays = {shape:loadshape(sh_path, res=resol) for shape, sh_path in proto_paths.items()}
 
 arrays.update(proto_arrays)
