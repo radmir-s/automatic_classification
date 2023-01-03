@@ -1,6 +1,6 @@
 import numpy as np
 
-def hausdorff_quant(x, y, q):
+def hausdorff_quant(x, y, q=np.linspace(0,1,11)):
     assert isinstance(x, np.ndarray) and isinstance(y, np.ndarray), \
         "x and y have to be numpy arrays"
     assert x.shape[1] == y.shape[1] == 3, \
