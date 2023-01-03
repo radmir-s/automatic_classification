@@ -10,18 +10,25 @@ from itertools import product
 import json
 import time
 
+"""
+all-dir is ./classes/train or ./classes/test
+proto-csv contains shape NAMES, CLASSES, PATHS
+resolution-level is one of s450, s900, s1800, s3600, s7200
+"""
+
 parser = argparse.ArgumentParser()
-parser.add_argument('-d', '--all-dir' , required=True)
+parser.add_argument('-d', '--all-dir' , required=True) 
 parser.add_argument('-p', '--proto-csv' , required=True)
+parser.add_argument('-r', '--resolution-level' , required=True)
 parser.add_argument('-q', '--haus-quants', nargs='*', type=float)
 parser.add_argument('-w', '--haus-weights', nargs='*', type=float)
 parser.add_argument('-n', '--num-workers', type=int)
 parser.add_argument('-c', '--chunk-size', type=int)
 
 args = parser.parse_args()
-# print(args)
 all_dir = args.all_dir
 proto_csv_path = args.proto_csv
+resol = args.resolution_level
 haus_q = args.haus_quants
 haus_w = args.haus_weights
 n_workers = args.num_workers if args.num_workers else int(mp.cpu_count()//2)
@@ -45,7 +52,7 @@ haus_q = np.round(haus_q,2)
 haus_w = np.round(haus_w,2)
 
 assert len(haus_q) == len(haus_w), \
-    "Quantiles and weights should have same length"
+    "Quantiles and weights should have the same length"
 
 classes = [dir for dir in os.listdir(all_dir) if os.path.isdir(os.path.join(all_dir, dir))]
 
@@ -61,13 +68,12 @@ for cls in classes:
         shape_paths[shape] = os.path.join(class_dir, file)
         shape_class[shape] = cls
 
-arrays = {shape:loadshape(sh_path) for shape, sh_path in shape_paths.items()}
-
+arrays = {shape:loadshape(sh_path, res=resol) for shape, sh_path in shape_paths.items()}
 
 dfp = pd.read_csv(proto_csv_path)
 proto_paths = {shape: shp for shape, shp in zip(dfp['shape'].values, dfp['path'].values)}
 proto_class = {shape: cls for shape, cls in zip(dfp['shape'].values, dfp['class'].values)}
-proto_arrays = {shape:loadshape(sh_path) for shape, sh_path in proto_paths.items()}
+proto_arrays = {shape:loadshape(sh_path, res=resol) for shape, sh_path in proto_paths.items()}
 
 arrays.update(proto_arrays)
 shape_class.update(proto_class)
