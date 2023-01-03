@@ -107,7 +107,9 @@ if __name__ == '__main__':
         data[f'q{q}'] = q_val
 
     df = pd.DataFrame(data)
-    df.to_csv('A2P.csv')
+    proto_csv = os.path.basename(proto_csv_path)
+    dir = os.path.basename(all_dir)
+    df.to_csv(f'A2P-{dir}-{proto_csv}-{resol}.csv')
 
     
 
