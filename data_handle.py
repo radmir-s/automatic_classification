@@ -2,8 +2,11 @@ from scipy.io import loadmat
 from sklearn.decomposition import PCA
 import pandas as pd
 
-def loadshape(path, align=True):
-    s = loadmat(path)['shape']
+def loadshape(path, res = '',align=True):
+    if res:
+        s = loadmat(path)[res]
+    else:
+        s = loadmat(path)['shape']
 
     if align:
         s = s - s.mean(axis=0)
