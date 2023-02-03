@@ -6,28 +6,6 @@ import pandas as pd
 
 from data_handle import loadshape
 
-def hausdorff_quant(x, y, q=np.linspace(0,1,11)):
-    assert isinstance(x, np.ndarray) and isinstance(y, np.ndarray), \
-        "x and y have to be numpy arrays"
-    assert x.shape[1] == y.shape[1] == 3, \
-        "x and y have to be in 3d"
-    D = x.reshape((-1,1,3)) - y.reshape((1,-1,3))
-    D2 = np.sum(D**2,axis=2)
-    Dx = D2.min(axis=0)
-    Dy = D2.min(axis=1)
-    Qx = np.quantile(Dx,q)
-    Qy = np.quantile(Dy,q)
-    Q = np.max((Qx, Qy), axis=0)
-    return np.sqrt(Q)
-
-def hausq_dist(x, y, q = np.linspace(0,1,11)):
-    w = np.ones_like(q, dtype=float)
-    w[0] = 0.5
-    w[-1] = 0.5
-
-    quants = hausdorff_quant(x, y, q)
-
-    return np.sum(quants * w)
 
 
 def eval_d2d_dist(dir1, dir2, resol):
@@ -69,4 +47,24 @@ def eval_d2d_dist(dir1, dir2, resol):
 
     return df
 
+def hausq_dist(x, y, q = np.linspace(0,1,11)):
+    w = np.ones_like(q, dtype=float)
+    w[0] = 0.5
+    w[-1] = 0.5
+    quants = hausdorff_quant(x, y, q)
 
+    return np.sum(quants * w)
+
+def hausdorff_quant(x, y, q=np.linspace(0,1,11)):
+    assert isinstance(x, np.ndarray) and isinstance(y, np.ndarray), \
+        "x and y have to be numpy arrays"
+    assert x.shape[1] == y.shape[1] == 3, \
+        "x and y have to be in 3d"
+    D = x.reshape((-1,1,3)) - y.reshape((1,-1,3))
+    D2 = np.sum(D**2,axis=2)
+    Dx = D2.min(axis=0)
+    Dy = D2.min(axis=1)
+    Qx = np.quantile(Dx,q)
+    Qy = np.quantile(Dy,q)
+    Q = np.max((Qx, Qy), axis=0)
+    return np.sqrt(Q)

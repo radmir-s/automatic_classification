@@ -12,3 +12,9 @@ args = parser.parse_args()
 df = eval_d2d_dist(args.dir1, args.dir2, args.resol)
 df.to_csv(f'A2A-{args.dir1}-{args.dir2}-{args.resol}.csv')
 
+
+"""
+command use template:
+
+python eval_d2d_dist.py -d1 dir1 -d2 dir2 -resol s900
+"""
