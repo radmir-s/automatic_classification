@@ -9,12 +9,16 @@ parser.add_argument('-d2', '--dir2' , required=True)
 parser.add_argument('-r', '--resol' , required=True)
 args = parser.parse_args()
 
+start=time.time()
 df = eval_d2d_dist(args.dir1, args.dir2, args.resol)
-df.to_csv(f'A2A-{args.dir1}-{args.dir2}-{args.resol}.csv')
+end=time.time()
+duration = int(end - start)
+
+df.to_csv(f'A2A-{duration}.csv')
 
 
 """
 command use template:
 
-python eval_d2d_dist.py -d1 dir1 -d2 dir2 -resol s900
+python eval_d2d_dist.py -d1 dir1 -d2 dir2 -r s900
 """
