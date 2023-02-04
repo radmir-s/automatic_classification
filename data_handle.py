@@ -1,6 +1,41 @@
 from scipy.io import loadmat
 from sklearn.decomposition import PCA
 import pandas as pd
+import numpy as np
+
+def epsnet(X, eps, L='L2', pick='max'):
+    representers = []
+    left = np.ones(X.shape[0], dtype=bool)
+
+    # pick distance from here L1 vs L2
+    match L:
+        case 'L1':
+            dist = np.sum(np.abs(X.reshape(1,-1,X.shape[1]) - X.reshape(-1,1,X.shape[1])),axis=-1)
+        case 'L2':
+            dist = np.sqrt(np.sum((X.reshape(1,-1,X.shape[1]) - X.reshape(-1,1,X.shape[1]))**2,axis=-1))
+
+    connections = dist<eps
+    neigh_sizes = []
+
+    while np.any(left):
+        match pick:
+            case 'max':
+                next_repr_ind = np.argmax(np.sum(connections, axis=1))
+            case 'random':
+                next_repr_ind = np.random.choice(np.argwhere(left).flatten())
+        
+        representers.append(next_repr_ind)
+        neighbours = connections[next_repr_ind]
+        neigh_sizes.append(sum(neighbours))
+
+        left[neighbours] = False
+        connections[~left] = False
+        connections[:, ~left] = False
+
+    representer_power = np.sum(dist[representers] < eps, axis=1)
+    redundancy = np.sum(dist[representers] < eps, axis=0)
+
+    return representers, representer_power, redundancy
 
 def loadshape(path, res = '',align=True):
     if res:
