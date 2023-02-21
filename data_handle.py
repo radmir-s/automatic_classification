@@ -50,6 +50,19 @@ def loadshape(path, res = '',align=True):
 
     return s
 
+def unpack_d2d(csv_path):
+    df = pd.read_csv(csv_path).drop('Unnamed: 0', axis=1)
+    shapes1 = df.shape1.unique()
+    shapes2 = df.shape2.unique()
+    df = df.set_index(['shape1', 'shape2'])
+
+    data = dict()
+    for a in shapes1:
+        data[a] = df.loc[a].loc[shapes2].values.flatten()
+
+    return pd.DataFrame(data, columns=shapes1,index=shapes2)
+
+
 def unpack_a2p(csv_path):
     dfs = pd.read_csv(csv_path).drop(['Unnamed: 0'],axis=1)
     protos = dfs.prototype.unique()
