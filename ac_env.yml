@@ -12,3 +12,5 @@ dependencies:
   - ipykernel
   - scipy
   - pip
+  - pip:
+    - POT
