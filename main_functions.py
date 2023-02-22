@@ -7,6 +7,48 @@ import pandas as pd
 from data_handle import loadshape
 
 
+def densify(s, **kwargs):
+    
+    x1, y1, z1 = s.min(axis=0) - 1e-2
+    x2, y2, z2 = s.max(axis=0) + 1e-2
+    
+    if 'vox' in kwargs:
+        vox = kwargs['vox']
+        xx = np.arange(x1, x2, vox)
+        yy = np.arange(y1, y2, vox)
+        zz = np.arange(z1, z2, vox)
+
+        dimx = len(xx) - 1
+        dimy = len(yy) - 1
+        dimz = len(zz) - 1
+    elif 'dim' in kwargs:
+        dimx, dimy, dimz = kwargs['dim']
+        xx = np.linspace(x1,x2,dimx+1)
+        yy = np.linspace(y1,y2,dimy+1)
+        zz = np.linspace(z1,z2,dimz+1)
+    else:
+        raise KeyError("Either 'vox' or 'dim' parameters should be defined")
+
+    sx = s[:,0].reshape(1,-1)
+    sy = s[:,1].reshape(1,-1)
+    sz = s[:,2].reshape(1,-1)
+
+    indx = (xx[:-1].reshape(-1,1) < sx) & (sx < xx[1:].reshape(-1,1))
+    indy = (yy[:-1].reshape(-1,1) < sy) & (sy < yy[1:].reshape(-1,1))
+    indz = (zz[:-1].reshape(-1,1) < sz) & (sz < zz[1:].reshape(-1,1))
+
+    voxel = np.sum(indx.reshape(dimx,1,1,-1) * indy.reshape(1,dimy,1,-1) * indz.reshape(1,1,dimz,-1), axis=-1 )
+    voxel = voxel/voxel.sum()
+
+    x = (xx[:-1] + xx[1:])/2
+    y = (yy[:-1] + yy[1:])/2
+    z = (zz[:-1] + zz[1:])/2
+
+    histocloud = [[x[indx], y[indy], z[indz], voxel[indx, indy, indz]] for indx, indy, indz in np.argwhere(voxel)]
+    histocloud = np.array(histocloud)
+
+    return histocloud
+
 
 def eval_d2d_dist(dir1, dir2, resol):
 
