@@ -13,6 +13,8 @@ def epsnet(X, eps, L='L2', pick='max'):
             dist = np.sum(np.abs(X.reshape(1,-1,X.shape[1]) - X.reshape(-1,1,X.shape[1])),axis=-1)
         case 'L2':
             dist = np.sqrt(np.sum((X.reshape(1,-1,X.shape[1]) - X.reshape(-1,1,X.shape[1]))**2,axis=-1))
+        case _:
+            raise KeyError("The 'dist' parameter must be either 'L1' or  'L2'")
 
     connections = dist<eps
     neigh_sizes = []
@@ -23,6 +25,8 @@ def epsnet(X, eps, L='L2', pick='max'):
                 next_repr_ind = np.argmax(np.sum(connections, axis=1))
             case 'random':
                 next_repr_ind = np.random.choice(np.argwhere(left).flatten())
+            case _:
+                raise KeyError("The 'pick' parameter must be either 'max' or  'random'")
         
         representers.append(next_repr_ind)
         neighbours = connections[next_repr_ind]
@@ -72,13 +76,16 @@ def unpack_a2p(csv_path):
     for proto in protos:
         dfp = dfs[dfs.prototype == proto]
         dfp = dfp.set_index('shape').sort_index()
-        dfc = dfp.shape_class
         dfp = dfp.rename(columns={'dist':proto})
         dfp = dfp.loc[:, [proto]]
         dfps.append(dfp)
 
     a2p = pd.concat(dfps, axis=1)
     X = a2p.values
+
+    dfp = dfs[dfs.prototype == protos[0]]
+    dfp = dfp.set_index('shape').sort_index()
+    dfc = dfp.shape_class    
     y = dfc.values
 
     return X, y
@@ -96,12 +103,15 @@ def unpack_a2p_dq(csv_path, diff=False):
     for proto in df.prototype.unique():
         dfp = df[df.prototype == proto]
         dfp = dfp.set_index('shape').sort_index()
-        y = dfp.shape_class.values
         dfp = dfp.rename(columns={f'q{k/10:01}':f'{proto}.q{k/10:01}' for k in range(1,11)})
         dfp = dfp.loc[:,dfp.columns.str.startswith(str(proto))]
         dfps.append(dfp)
     
     a2p = pd.concat(dfps, axis=1)
     X = a2p.values
+
+    dfp = df[df.prototype == df.prototype[0]]
+    dfp = dfp.set_index('shape').sort_index()
+    y = dfp.shape_class.values
     
     return X, y
