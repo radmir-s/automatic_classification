@@ -3,8 +3,132 @@ import os
 from collections import defaultdict
 from itertools import product
 import pandas as pd
+import time
+import ot
 
 from data_handle import loadshape
+
+
+def eval_d2d_sinkhorn(dir1, dir2, resol, vox, reg=1e-2, numItermax=10_000):
+
+    # default summation parameters
+    haus_q = np.linspace(0,1,11)
+    haus_w = np.ones_like(haus_q, dtype=float)
+    haus_w[0] = 0.5
+    haus_w[-1] = 0.5
+
+    matfiles1 = [file for file in os.listdir(dir1) if (file.endswith('.mat') and file.startswith('shapes_'))]
+    shape_arrays1 = dict()
+    for file in matfiles1:
+        shape = file.removesuffix('.mat').removeprefix('shapes_')
+        shape_path = os.path.join(dir1, file)
+        shape_arrays1[shape] = loadshape(shape_path, res=resol)
+
+    matfiles2 = [file for file in os.listdir(dir2) if (file.endswith('.mat') and file.startswith('shapes_'))]
+    shape_arrays2 = dict()
+    for file in matfiles2:
+        shape = file.removesuffix('.mat').removeprefix('shapes_')
+        shape_path = os.path.join(dir2, file)
+        shape_arrays2[shape] = loadshape(shape_path, res=resol)
+
+    out_data = defaultdict(lambda:list())
+
+    for (s1, S1), (s2, S2) in product(shape_arrays1.items(), shape_arrays2.items()):
+        out_data['shape1'].append(s1)
+        out_data['shape2'].append(s2)
+        cost, runtime, itern, (np1, np2) = sinkhorn(S1, S2, vox=vox, reg=reg, numItermax=numItermax)
+        out_data['cost'].append(cost)
+        out_data['runtime'].append(runtime)
+        out_data['itern'].append(itern)
+        out_data['np1'].append(np1)
+        out_data['np2'].append(np2)
+
+    df = pd.DataFrame(out_data)
+
+    return df
+
+def eval_d2d_emd(dir1, dir2, resol, vox):
+
+    # default summation parameters
+    haus_q = np.linspace(0,1,11)
+    haus_w = np.ones_like(haus_q, dtype=float)
+    haus_w[0] = 0.5
+    haus_w[-1] = 0.5
+
+    matfiles1 = [file for file in os.listdir(dir1) if (file.endswith('.mat') and file.startswith('shapes_'))]
+    shape_arrays1 = dict()
+    for file in matfiles1:
+        shape = file.removesuffix('.mat').removeprefix('shapes_')
+        shape_path = os.path.join(dir1, file)
+        shape_arrays1[shape] = loadshape(shape_path, res=resol)
+
+    matfiles2 = [file for file in os.listdir(dir2) if (file.endswith('.mat') and file.startswith('shapes_'))]
+    shape_arrays2 = dict()
+    for file in matfiles2:
+        shape = file.removesuffix('.mat').removeprefix('shapes_')
+        shape_path = os.path.join(dir2, file)
+        shape_arrays2[shape] = loadshape(shape_path, res=resol)
+
+    out_data = defaultdict(lambda:list())
+
+    for (s1, S1), (s2, S2) in product(shape_arrays1.items(), shape_arrays2.items()):
+        out_data['shape1'].append(s1)
+        out_data['shape2'].append(s2)
+        cost, runtime, itern, (np1, np2) = emd(S1, S2, vox=vox)
+        out_data['cost'].append(cost)
+        out_data['runtime'].append(runtime)
+        out_data['itern'].append(itern)
+        out_data['np1'].append(np1)
+        out_data['np2'].append(np2)
+
+    df = pd.DataFrame(out_data)
+
+    return df
+
+
+def emd(s1, s2, vox=5e-2):
+    start = time.time()
+    cd1 = densify(s1, vox=vox)
+    cd2 = densify(s2, vox=vox)
+
+    c1 = cd1[:, :3]
+    d1 = cd1[:, 3:].flatten()
+
+    c2 = cd2[:, :3]
+    d2 = cd2[:, 3:].flatten()   
+                
+    M = np.sqrt( np.sum( np.square( c1.reshape(-1,1,3) - c2.reshape(1,-1,3) ), axis=2 ) )
+
+    T, log = ot.emd(d1, d2, M, log=True)
+
+    end = time.time()
+    runtime = end-start
+
+    return np.sum(T*M), runtime, None, T.shape
+
+
+
+def sinkhorn(s1, s2, vox=5e-2, reg=5e-3, numItermax=10_000):
+    start = time.time()
+    cd1 = densify(s1, vox=vox)
+    cd2 = densify(s2, vox=vox)
+
+    c1 = cd1[:, :3]
+    d1 = cd1[:, 3:].flatten()
+
+    c2 = cd2[:, :3]
+    d2 = cd2[:, 3:].flatten()   
+                
+    M = np.sqrt( np.sum( np.square( c1.reshape(-1,1,3) - c2.reshape(1,-1,3) ), axis=2 ) )
+
+    T, log = ot.sinkhorn(d1, d2, M, reg=1e-2, method='sinkhorn', log=True, numItermax=numItermax)
+
+
+    end = time.time()
+    runtime = end-start
+    
+    return np.sum(T*M), runtime, log['niter'], T.shape
+
 
 
 def densify(s, **kwargs):
