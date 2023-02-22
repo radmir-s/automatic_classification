@@ -23,5 +23,5 @@ df.to_csv(f'd2d-sinkhorn-{duration}-{args.vox}-{args.reg}.csv')
 """
 command use template:
 
-python eval_d2d_emd.py -d1 dir1 -d2 dir2 -r s7200  -v 0.05 -l 0.01 -i 5000 
+python eval_d2d_sinkhorn.py -d1 $dir1 -d2 $dir2 -r s7200  -v 0.05 -l 0.01 -i 5000 
 """

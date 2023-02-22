@@ -21,5 +21,5 @@ df.to_csv(f'd2d-emd-{duration}-{args.vox}.csv')
 """
 command use template:
 
-python eval_d2d_emd.py -d1 dir1 -d2 dir2 -r s7200  -v 0.05
+python eval_d2d_emd.py -d1 $dir1 -d2 $dir2 -r s7200  -v 0.05
 """
