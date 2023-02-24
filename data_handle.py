@@ -41,7 +41,7 @@ def epsnet(X, eps, L='L2', pick='max'):
 
     return representers, representer_power, redundancy
 
-def loadshape(path, res = '',align=True):
+def loadshape(path, res = '', align=True, rescale=False):
     if res:
         s = loadmat(path)[res]
     else:
@@ -51,8 +51,23 @@ def loadshape(path, res = '',align=True):
         s = s - s.mean(axis=0)
         pca = PCA(3)
         s = pca.fit_transform(s)   
+        
+        if rescale:
+            s /= pca.singular_values_
 
     return s
+
+def unpack_d2d_2(csv_path, metric):
+    df = pd.read_csv(csv_path).drop('Unnamed: 0', axis=1)
+    shapes1 = sorted(df.shape1.unique())
+    shapes2 = sorted(df.shape2.unique())
+    df = df.set_index(['shape1', 'shape2'])
+
+    data = dict()
+    for a in shapes1:
+        data[a] = df.loc[a].loc[shapes2][metric].values.flatten()
+
+    return pd.DataFrame(data, columns=shapes1,index=shapes2)
 
 def unpack_d2d(csv_path):
     df = pd.read_csv(csv_path).drop('Unnamed: 0', axis=1)
