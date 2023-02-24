@@ -2,7 +2,6 @@ name: ac
 channels:
   - conda-forge
   - defaults
-  - mro
 dependencies:
   - python=3.10.10
   - numpy
@@ -10,7 +9,7 @@ dependencies:
   - scikit-learn
   - matplotlib
   - ipykernel
-  - scipy
   - pip
   - pip:
     - POT
+    - k-means-constrained
