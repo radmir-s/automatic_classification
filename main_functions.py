@@ -1,90 +1,6 @@
 import numpy as np
-import os
-from collections import defaultdict
-from itertools import product
-import pandas as pd
 import time
 import ot
-
-from data_handle import loadshape
-
-
-def eval_d2d_sinkhorn(dir1, dir2, resol, vox, reg=1e-2, numItermax=10_000):
-
-    # default summation parameters
-    haus_q = np.linspace(0,1,11)
-    haus_w = np.ones_like(haus_q, dtype=float)
-    haus_w[0] = 0.5
-    haus_w[-1] = 0.5
-
-    matfiles1 = [file for file in os.listdir(dir1) if (file.endswith('.mat') and file.startswith('shapes_'))]
-    shape_arrays1 = dict()
-    for file in matfiles1:
-        shape = file.removesuffix('.mat').removeprefix('shapes_')
-        shape_path = os.path.join(dir1, file)
-        shape_arrays1[shape] = loadshape(shape_path, res=resol)
-
-    matfiles2 = [file for file in os.listdir(dir2) if (file.endswith('.mat') and file.startswith('shapes_'))]
-    shape_arrays2 = dict()
-    for file in matfiles2:
-        shape = file.removesuffix('.mat').removeprefix('shapes_')
-        shape_path = os.path.join(dir2, file)
-        shape_arrays2[shape] = loadshape(shape_path, res=resol)
-
-    out_data = defaultdict(lambda:list())
-
-    for (s1, S1), (s2, S2) in product(shape_arrays1.items(), shape_arrays2.items()):
-        out_data['shape1'].append(s1)
-        out_data['shape2'].append(s2)
-        cost, runtime, itern, (np1, np2) = sinkhorn(S1, S2, vox=vox, reg=reg, numItermax=numItermax)
-        out_data['cost'].append(cost)
-        out_data['runtime'].append(runtime)
-        out_data['itern'].append(itern)
-        out_data['np1'].append(np1)
-        out_data['np2'].append(np2)
-
-    df = pd.DataFrame(out_data)
-
-    return df
-
-def eval_d2d_emd(dir1, dir2, resol, vox):
-
-    # default summation parameters
-    haus_q = np.linspace(0,1,11)
-    haus_w = np.ones_like(haus_q, dtype=float)
-    haus_w[0] = 0.5
-    haus_w[-1] = 0.5
-
-    matfiles1 = [file for file in os.listdir(dir1) if (file.endswith('.mat') and file.startswith('shapes_'))]
-    shape_arrays1 = dict()
-    for file in matfiles1:
-        shape = file.removesuffix('.mat').removeprefix('shapes_')
-        shape_path = os.path.join(dir1, file)
-        shape_arrays1[shape] = loadshape(shape_path, res=resol)
-
-    matfiles2 = [file for file in os.listdir(dir2) if (file.endswith('.mat') and file.startswith('shapes_'))]
-    shape_arrays2 = dict()
-    for file in matfiles2:
-        shape = file.removesuffix('.mat').removeprefix('shapes_')
-        shape_path = os.path.join(dir2, file)
-        shape_arrays2[shape] = loadshape(shape_path, res=resol)
-
-    out_data = defaultdict(lambda:list())
-
-    for (s1, S1), (s2, S2) in product(shape_arrays1.items(), shape_arrays2.items()):
-        out_data['shape1'].append(s1)
-        out_data['shape2'].append(s2)
-        cost, runtime, itern, (np1, np2) = emd(S1, S2, vox=vox)
-        out_data['cost'].append(cost)
-        out_data['runtime'].append(runtime)
-        out_data['itern'].append(itern)
-        out_data['np1'].append(np1)
-        out_data['np2'].append(np2)
-
-    df = pd.DataFrame(out_data)
-
-    return df
-
 
 def emd(s1, s2, vox=5e-2):
     start = time.time()
@@ -105,7 +21,6 @@ def emd(s1, s2, vox=5e-2):
     runtime = end-start
 
     return np.sum(T*M), runtime, None, T.shape
-
 
 
 def sinkhorn(s1, s2, vox=5e-2, reg=5e-3, numItermax=10_000):
@@ -129,6 +44,48 @@ def sinkhorn(s1, s2, vox=5e-2, reg=5e-3, numItermax=10_000):
     
     return np.sum(T*M), runtime, log['niter'], T.shape
 
+
+def densify2(s, cubenum=None):
+
+    if cubenum is None:
+        cubenum = s.shape[0]
+
+    x1, y1, z1 = s.min(axis=0)
+    x2, y2, z2 = s.max(axis=0)
+
+    volume = (x2 - x1) * (y2 - y1) * (z2 - z1)
+    css = np.cbrt(volume / cubenum) # cube side size
+
+    xx = np.arange(x1 - css/2, x2 + css, css)
+    yy = np.arange(y1 - css/2, y2 + css, css)
+    zz = np.arange(z1 - css/2, z2 + css, css)
+
+    dimx = len(xx) - 1
+    dimy = len(yy) - 1
+    dimz = len(zz) - 1
+
+    sx = s[:,0].reshape(1,-1)
+    sy = s[:,1].reshape(1,-1)
+    sz = s[:,2].reshape(1,-1)
+
+    indx = (xx[:-1].reshape(-1,1) < sx) & (sx < xx[1:].reshape(-1,1))
+    indy = (yy[:-1].reshape(-1,1) < sy) & (sy < yy[1:].reshape(-1,1))
+    indz = (zz[:-1].reshape(-1,1) < sz) & (sz < zz[1:].reshape(-1,1))
+
+    indxyz = indx.reshape(dimx,1,1,-1) * indy.reshape(1,dimy,1,-1) * indz.reshape(1,1,dimz,-1)
+    dens = np.sum(indxyz, axis=3)
+    dens = dens/dens.sum()
+
+    densecloud = list()
+    for ixyz in np.argwhere(dens):
+        cubeind = indxyz[*ixyz]
+        cubepoints = s[cubeind]
+        center = cubepoints.mean(axis=0)
+        densecloud.append([*center, dens[*ixyz]])
+
+    densecloud = np.array(densecloud)
+
+    return densecloud
 
 
 def densify(s, **kwargs):
@@ -174,45 +131,6 @@ def densify(s, **kwargs):
     return histocloud
 
 
-def eval_d2d_dist(dir1, dir2, resol):
-
-    # default summation parameters
-    haus_q = np.linspace(0,1,11)
-    haus_w = np.ones_like(haus_q, dtype=float)
-    haus_w[0] = 0.5
-    haus_w[-1] = 0.5
-
-    matfiles1 = [file for file in os.listdir(dir1) if (file.endswith('.mat') and file.startswith('shapes_'))]
-    # shape_paths1 = dict()
-    shape_arrays1 = dict()
-    for file in matfiles1:
-        shape = file.removesuffix('.mat').removeprefix('shapes_')
-        # shape_paths1[shape] = os.path.join(dir1, file)
-        # shape_arrays1[shape] = loadshape(shape_paths1[shape], res=resol)
-        shape_path = os.path.join(dir1, file)
-        shape_arrays1[shape] = loadshape(shape_path, res=resol)
-
-    matfiles2 = [file for file in os.listdir(dir2) if (file.endswith('.mat') and file.startswith('shapes_'))]
-    # shape_paths2 = dict()
-    shape_arrays2 = dict()
-    for file in matfiles2:
-        shape = file.removesuffix('.mat').removeprefix('shapes_')
-        # shape_paths2[shape] = os.path.join(dir2, file)
-        # shape_arrays2[shape] = loadshape(shape_paths1[shape], res=resol)
-        shape_path = os.path.join(dir2, file)
-        shape_arrays2[shape] = loadshape(shape_path, res=resol)
-
-    out_data = defaultdict(lambda:list())
-
-    for (s1, S1), (s2, S2) in product(shape_arrays1.items(), shape_arrays2.items()):
-        out_data['shape1'].append(s1)
-        out_data['shape2'].append(s2)
-        out_data['dist'].append(hausq_dist(S1, S2))
-
-    df = pd.DataFrame(out_data)
-
-    return df
-
 def hausq_dist(x, y, q = np.linspace(0,1,11)):
     w = np.ones_like(q, dtype=float)
     w[0] = 0.5
@@ -220,6 +138,7 @@ def hausq_dist(x, y, q = np.linspace(0,1,11)):
     quants = hausdorff_quant(x, y, q)
 
     return np.sum(quants * w)
+
 
 def hausdorff_quant(x, y, q=np.linspace(0,1,11)):
     assert isinstance(x, np.ndarray) and isinstance(y, np.ndarray), \
