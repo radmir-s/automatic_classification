@@ -3,11 +3,10 @@ import os
 import pandas as pd
 
 from collections import defaultdict
-from collections import defaultdict
 from itertools import product
 
-from data_handle import loadshape
-from main_functions import hausq_dist, sinkhorn, emd
+from ..src.data_handle import loadshape
+from ..src.main_functions import hausq_dist, sinkhorn, emd
 
 def eval_d2d_emd_2(dir1, dir2, resol, vox):
     pass

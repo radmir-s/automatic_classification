@@ -3,6 +3,7 @@ from sklearn.decomposition import PCA
 import pandas as pd
 import numpy as np
 
+
 def epsnet(X, eps, L='L2', pick='max'):
     representers = []
     left = np.ones(X.shape[0], dtype=bool)

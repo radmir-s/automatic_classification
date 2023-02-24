@@ -1,6 +1,6 @@
 import argparse
 import time
-from main_functions import eval_d2d_sinkhorn
+from .evaluations import eval_d2d_sinkhorn
 
 
 parser = argparse.ArgumentParser()

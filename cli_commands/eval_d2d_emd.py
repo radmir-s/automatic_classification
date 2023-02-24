@@ -1,6 +1,6 @@
 import argparse
 import time
-from main_functions import eval_d2d_emd
+from .evaluations import eval_d2d_emd
 
 
 parser = argparse.ArgumentParser()

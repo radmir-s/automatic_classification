@@ -2,13 +2,12 @@ import os
 import multiprocessing as mp
 import numpy as np
 import pandas as pd
-from data_handle import loadshape
-from main_functions import hausdorff_quant
+
+from ..src.data_handle import loadshape
+from ..src.main_functions import hausdorff_quant
+
 import argparse
-from collections import defaultdict
 from itertools import product
-import json
-import time
 
 """
 all-dir is ./classes/train or ./classes/test
