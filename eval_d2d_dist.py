@@ -1,6 +1,6 @@
 import argparse
 import time
-from .evaluations import eval_d2d_dist
+from src.evaluations import eval_d2d_dist
 
 
 parser = argparse.ArgumentParser()

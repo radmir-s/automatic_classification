@@ -2,8 +2,8 @@ import os
 import numpy as np
 from random import sample
 
-from ..src.data_handle import loadshape
-from ..src.main_functions import hausdorff_quant
+from src.data_handle import loadshape
+from src.main_functions import hausdorff_quant
 
 import pandas as pd
 import argparse

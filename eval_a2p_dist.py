@@ -3,8 +3,8 @@ import multiprocessing as mp
 import numpy as np
 import pandas as pd
 
-from ..src.data_handle import loadshape
-from ..src.main_functions import hausdorff_quant
+from src.data_handle import loadshape
+from src.main_functions import hausdorff_quant
 
 import argparse
 from itertools import product
