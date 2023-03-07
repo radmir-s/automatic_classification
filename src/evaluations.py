@@ -41,8 +41,39 @@ def s2s_regularity(s1, s2):
 
     return data
 
-def eval_d2d_emd_2(dir1, dir2, resol, vox):
-    pass
+def eval_d2d_regularity(dir1, dir2, resol='s7200'):
+
+    matfiles1 = [file for file in os.listdir(dir1) if (file.endswith('.mat') and file.startswith('shapes_'))]
+    shape_arrays1 = dict()
+    for file in matfiles1:
+        shape = file.removesuffix('.mat').removeprefix('shapes_')
+        shape_path = os.path.join(dir1, file)
+        shape_arrays1[shape] = loadshape(shape_path, res=resol)
+
+    matfiles2 = [file for file in os.listdir(dir2) if (file.endswith('.mat') and file.startswith('shapes_'))]
+    shape_arrays2 = dict()
+    for file in matfiles2:
+        shape = file.removesuffix('.mat').removeprefix('shapes_')
+        shape_path = os.path.join(dir2, file)
+        shape_arrays2[shape] = loadshape(shape_path, res=resol)
+
+    out_data = defaultdict(lambda:list())
+
+    for (s1, S1), (s2, S2) in product(shape_arrays1.items(), shape_arrays2.items()):
+        out_data['shape1'].append(s1)
+        out_data['shape2'].append(s2)
+        dpnmean, dpnmax, dpn2, dpn3, rad1, rad2, rad3 = s2s_regularity(S1, S2)
+        out_data['dpnmean'].append(dpnmean)
+        out_data['dpnmax'].append(dpnmax)
+        out_data['dpn2'].append(dpn2)
+        out_data['dpn3'].append(dpn3)
+        out_data['rad1'].append(rad1)
+        out_data['rad2'].append(rad2)
+        out_data['rad3'].append(rad3)
+
+    df = pd.DataFrame(out_data)
+
+    return df
 
 def eval_d2d_dist(dir1, dir2, resol):
 
@@ -136,41 +167,6 @@ def eval_d2d_emd(dir1, dir2, resol, vox):
         out_data['itern'].append(itern)
         out_data['np1'].append(np1)
         out_data['np2'].append(np2)
-
-    df = pd.DataFrame(out_data)
-
-    return df
-
-
-def eval_d2d_regularity(dir1, dir2, resol='s7200'):
-
-    matfiles1 = [file for file in os.listdir(dir1) if (file.endswith('.mat') and file.startswith('shapes_'))]
-    shape_arrays1 = dict()
-    for file in matfiles1:
-        shape = file.removesuffix('.mat').removeprefix('shapes_')
-        shape_path = os.path.join(dir1, file)
-        shape_arrays1[shape] = loadshape(shape_path, res=resol)
-
-    matfiles2 = [file for file in os.listdir(dir2) if (file.endswith('.mat') and file.startswith('shapes_'))]
-    shape_arrays2 = dict()
-    for file in matfiles2:
-        shape = file.removesuffix('.mat').removeprefix('shapes_')
-        shape_path = os.path.join(dir2, file)
-        shape_arrays2[shape] = loadshape(shape_path, res=resol)
-
-    out_data = defaultdict(lambda:list())
-
-    for (s1, S1), (s2, S2) in product(shape_arrays1.items(), shape_arrays2.items()):
-        out_data['shape1'].append(s1)
-        out_data['shape2'].append(s2)
-        dpnmean, dpnmax, dpn2, dpn3, rad1, rad2, rad3 = s2s_regularity(S1, S2)
-        out_data['dpnmean'].append(dpnmean)
-        out_data['dpnmax'].append(dpnmax)
-        out_data['dpn2'].append(dpn2)
-        out_data['dpn3'].append(dpn3)
-        out_data['rad1'].append(rad1)
-        out_data['rad2'].append(rad2)
-        out_data['rad3'].append(rad3)
 
     df = pd.DataFrame(out_data)
 
