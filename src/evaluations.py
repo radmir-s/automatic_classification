@@ -29,7 +29,7 @@ def s2s_regularity(s1, s2):
     T = ot.emd(d1, d2, M)
 
     dpn = np.sum(T>0.,axis=1) # dest_point_num
-    data = [np.mean(dpn), np.max(dpn), np.sum(dpn>2), np.sum(dpn>3)]
+    dpnmean, dpnmax, dpn2, dpn3 = np.mean(dpn), np.max(dpn), np.sum(dpn>2), np.sum(dpn>3)
 
     ms = np.mean(np.sort(np.linalg.norm(c2.reshape(1,-1,3) - c2.reshape(-1,1,3),axis=2),axis=0)[1:4])
 
@@ -37,9 +37,9 @@ def s2s_regularity(s1, s2):
     dist = np.linalg.norm(c2.reshape(1,-1,3)-centers.reshape(-1,1,3),axis=2) 
     radii = np.sum(T*dist,axis=1)
 
-    data.extend((np.sum(radii>ms), np.sum(radii>2*ms), np.sum(radii>4*ms)))
+    rad1, rad2, rad4 = np.sum(radii>ms), np.sum(radii>2*ms), np.sum(radii>4*ms)
 
-    return data
+    return dpnmean, dpnmax, dpn2, dpn3, rad1, rad2, rad4
 
 def eval_d2d_regularity(dir1, dir2, resol='s7200'):
 
@@ -62,14 +62,14 @@ def eval_d2d_regularity(dir1, dir2, resol='s7200'):
     for (s1, S1), (s2, S2) in product(shape_arrays1.items(), shape_arrays2.items()):
         out_data['shape1'].append(s1)
         out_data['shape2'].append(s2)
-        dpnmean, dpnmax, dpn2, dpn3, rad1, rad2, rad3 = s2s_regularity(S1, S2)
+        dpnmean, dpnmax, dpn2, dpn3, rad1, rad2, rad4 = s2s_regularity(S1, S2)
         out_data['dpnmean'].append(dpnmean)
         out_data['dpnmax'].append(dpnmax)
         out_data['dpn2'].append(dpn2)
         out_data['dpn3'].append(dpn3)
         out_data['rad1'].append(rad1)
         out_data['rad2'].append(rad2)
-        out_data['rad3'].append(rad3)
+        out_data['rad4'].append(rad4)
 
     df = pd.DataFrame(out_data)
 

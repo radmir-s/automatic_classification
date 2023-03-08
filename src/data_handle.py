@@ -4,6 +4,33 @@ import pandas as pd
 import numpy as np
 
 
+def readvtk(vtk_path):
+    with open(vtk_path,'r') as file:
+        lines = file.readlines()
+
+    scan = 'header'
+    for line in lines:
+
+        match scan:
+            case 'header':
+                if line.lower().startswith('points'):
+                    numpoints = int(line.split()[1])
+                    points = np.zeros((numpoints, 3))
+                    scan = 'points'
+                    ind = 0
+
+            case 'points':
+                if line.lower().startswith('triangle_strips'):
+                    scan = 'exit'
+                    break
+                numbers = tuple(map(float,line.split()))
+                assert len(numbers)%3 == 0 
+                for k in range(0, len(numbers), 3):
+                    points[ind] = numbers[k:k+3]
+                    ind += 1
+    return points 
+
+
 def epsnet(X, eps, L='L2', pick='max'):
     representers = []
     left = np.ones(X.shape[0], dtype=bool)
