@@ -3,8 +3,14 @@ from sklearn.decomposition import PCA
 import pandas as pd
 import numpy as np
 
+def vtk2numpy_dir(vtkdir, npydir):
+    vtkfiles = {file.removesuffix('.vtk'):os.path.join(vtkdir, file) for file in os.listdir(vtkdir) if file.endswith('vtk')}
+    for filename, vtkpath in vtkfiles.items():
+        points = readvtk(vtkpath)
 
-def readvtk(vtk_path):
+        np.save(os.path.join(npydir, filename),points)
+        
+def readvtk(vtk_path, align=True, rescale=False):
     with open(vtk_path,'r') as file:
         lines = file.readlines()
 
@@ -28,7 +34,17 @@ def readvtk(vtk_path):
                 for k in range(0, len(numbers), 3):
                     points[ind] = numbers[k:k+3]
                     ind += 1
-    return points 
+
+    s = points
+    if align:
+        s = s - s.mean(axis=0)
+        pca = PCA(3)
+        s = pca.fit_transform(s)   
+        
+        if rescale:
+            s /= pca.singular_values_
+        
+    return s 
 
 
 def epsnet(X, eps, L='L2', pick='max'):

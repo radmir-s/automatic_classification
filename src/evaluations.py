@@ -2,12 +2,66 @@ import numpy as np
 import os
 import pandas as pd
 import ot
+import time
 
 from collections import defaultdict
 from itertools import product
 
 from .data_handle import loadshape
 from .main_functions import hausq_dist, sinkhorn, emd, densify2
+
+
+def d2d_emd(dir1, dir2):
+
+    npyfiles1 = {file.removesuffix('.npy'):os.path.join(dir1, file) for file in os.listdir(dir1) if file.endswith('npy')}
+    npyfiles2 = {file.removesuffix('.npy'):os.path.join(dir2, file) for file in os.listdir(dir2) if file.endswith('npy')}
+
+    out_data = defaultdict(lambda:list())
+
+    for (s1, path1), (s2, path2) in product(npyfiles1.items(), npyfiles2.items()):
+        out_data['shape1'].append(s1)
+        out_data['shape2'].append(s2)
+        (sdist, stime, ns1, ns2), (cdist, ctime, nc1, nc2) = s2s_emd(path1, path2)
+
+        out_data['sdist'].append(sdist)
+        out_data['stime'].append(stime)
+        out_data['ns1'].append(ns1)
+        out_data['ns2'].append(ns2)
+        out_data['cdist'].append(cdist)
+        out_data['ctime'].append(ctime)
+        out_data['nc1'].append(nc1)
+        out_data['nc2'].append(nc2)
+
+
+    df = pd.DataFrame(out_data)
+
+    return df
+
+def s2s_emd(file1, file2):
+
+    def emd(c1, c2):
+        start = time.time()
+        d1 = np.ones(len(c1)) / len(c1)
+        d2 = np.ones(len(c2)) / len(c2)
+        M = np.sqrt( np.sum( np.square( c1.reshape(-1,1,3) - c2.reshape(1,-1,3) ), axis=2 ) )
+        T = ot.emd(d1, d2, M)
+        end = time.time()
+        runtime = round(end-start,2)
+        return np.sum(T*M), runtime
+        
+    s1 = np.load(file1)
+    s2 = np.load(file2)
+
+    cd1 = densify2(s1, cubenum=None)
+    cd2 = densify2(s2, cubenum=None)
+
+    c1 = cd1[:,:3]
+    c2 = cd2[:,:3]
+
+    sdist, stime = emd(s1, s2)
+    cdist, ctime = emd(c1, c2)
+
+    return (sdist, stime, len(s1), len(s2)), (cdist, ctime, len(c1), len(c2))
 
 
 def s2s_regularity(s1, s2):
