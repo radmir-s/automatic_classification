@@ -31,23 +31,24 @@ def d2d_emd(dir1, dir2):
         out_data['ctime'].append(ctime)
         out_data['nc1'].append(nc1)
         out_data['nc2'].append(nc2)
+        # print('Finished', s1, s2)
 
 
     df = pd.DataFrame(out_data)
 
     return df
 
-def s2s_emd(file1, file2):
+def emd(c1, c2):
+    start = time.time()
+    d1 = np.ones(len(c1)) / len(c1)
+    d2 = np.ones(len(c2)) / len(c2)
+    M = np.sqrt( np.sum( np.square( c1.reshape(-1,1,3) - c2.reshape(1,-1,3) ), axis=2 ) )
+    T = ot.emd(d1, d2, M)
+    end = time.time()
+    runtime = round(end-start,2)
+    return np.sum(T*M), runtime
 
-    def emd(c1, c2):
-        start = time.time()
-        d1 = np.ones(len(c1)) / len(c1)
-        d2 = np.ones(len(c2)) / len(c2)
-        M = np.sqrt( np.sum( np.square( c1.reshape(-1,1,3) - c2.reshape(1,-1,3) ), axis=2 ) )
-        T = ot.emd(d1, d2, M)
-        end = time.time()
-        runtime = round(end-start,2)
-        return np.sum(T*M), runtime
+def s2s_emd(file1, file2):
         
     s1 = np.load(file1)
     s2 = np.load(file2)

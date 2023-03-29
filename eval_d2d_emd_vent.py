@@ -1,6 +1,8 @@
 import argparse
 import time
 from src.evaluations import d2d_emd
+import warnings
+warnings.filterwarnings("ignore")
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-d1', '--dir1' , required=True) 
