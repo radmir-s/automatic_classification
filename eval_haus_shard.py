@@ -8,7 +8,7 @@ from scipy.stats import entropy
 import numpy as np
 import ot
 
-from ac.src.main_functions import hausq_dist
+from src.main_functions import hausq_dist
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-csv' , required=True) 
