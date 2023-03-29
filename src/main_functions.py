@@ -74,7 +74,7 @@ def densify2(s, cubenum=None):
 
     indxyz = indx.reshape(dimx,1,1,-1) * indy.reshape(1,dimy,1,-1) * indz.reshape(1,1,dimz,-1)
     dens = np.sum(indxyz, axis=3)
-    dens = dens/dens.sum()
+    dens = dens/dens.sum() # voxel
 
     densecloud = list()
     for ixyz in np.argwhere(dens):
