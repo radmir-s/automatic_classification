@@ -13,7 +13,7 @@ def emd(s1, s2, vox=5e-2):
     c2 = cd2[:, :3]
     d2 = cd2[:, 3:].flatten()   
                 
-    M = np.sqrt( np.sum( np.square( c1.reshape(-1,1,3) - c2.reshape(1,-1,3) ), axis=2 ) )
+    M = np.sqrt( ot.dist(c1, c2) )
 
     T, log = ot.emd(d1, d2, M, log=True)
 
@@ -34,7 +34,7 @@ def sinkhorn(s1, s2, vox=5e-2, reg=5e-3, numItermax=10_000):
     c2 = cd2[:, :3]
     d2 = cd2[:, 3:].flatten()   
                 
-    M = np.sqrt( np.sum( np.square( c1.reshape(-1,1,3) - c2.reshape(1,-1,3) ), axis=2 ) )
+    M = np.sqrt( ot.dist(c1, c2) )
 
     T, log = ot.sinkhorn(d1, d2, M, reg=1e-2, method='sinkhorn', log=True, numItermax=numItermax)
 
