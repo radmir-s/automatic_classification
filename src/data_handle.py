@@ -9,7 +9,51 @@ def vtk2numpy_dir(vtkdir, npydir):
         points = readvtk(vtkpath)
 
         np.save(os.path.join(npydir, filename),points)
+
+def readvtk2(vtk_path, align=True, rescale=False):
+    with open(vtk_path,'r') as file:
+        section = 'header'
+        points = []
+        polygons = []
+        for line in file.readlines():
+
+            if (section == 'header') and line.lower().startswith('points'):
+                section = 'points'
+                pnum = int(line.split()[1])
+                continue
+            
+            elif (section == 'points') and line.lower().startswith('polygons'):
+                section = 'polygons'
+                continue
+
+            elif (section == 'polygons') and line.lower().startswith('cell_data'):
+                break
+            
+            match section:
+                case 'header':
+                    continue
+                case 'points':
+                    p = list(map(float, line.split()))
+                    points.append(p)
+                case 'polygons':
+                    p = list(map(int, line.split()))
+                    polygons.append(p)
+
+    s = np.array(points)
+    connections = np.array(polygons)
+
+    if align:
+        s = s - s.mean(axis=0)
+
+        pca = PCA(3).fit(s)
+        rotation = pca.components_.T if np.linalg.det(pca.components_)>0 else -pca.components_.T
+        s = s @ rotation
         
+        if rescale:
+            s /= pca.singular_values_
+
+    return s, connections
+
 def readvtk(vtk_path, align=True, rescale=False):
     with open(vtk_path,'r') as file:
         lines = file.readlines()

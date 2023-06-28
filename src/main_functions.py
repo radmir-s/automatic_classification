@@ -45,16 +45,18 @@ def sinkhorn(s1, s2, vox=5e-2, reg=5e-3, numItermax=10_000):
     return np.sum(T*M), runtime, log['niter'], T.shape
 
 
-def densify2(s, cubenum=None):
-
-    if cubenum is None:
-        cubenum = s.shape[0]
+def densify2(s, cubenum=None, css=None):
 
     x1, y1, z1 = s.min(axis=0)
     x2, y2, z2 = s.max(axis=0)
 
-    volume = (x2 - x1) * (y2 - y1) * (z2 - z1)
-    css = np.cbrt(volume / cubenum) # cube side size
+    if css is None:
+        if cubenum is None:
+            cubenum = s.shape[0]
+
+        volume = (x2 - x1) * (y2 - y1) * (z2 - z1)
+        css = np.cbrt(volume / cubenum) # cube side size
+
 
     xx = np.arange(x1 - css/2, x2 + css, css)
     yy = np.arange(y1 - css/2, y2 + css, css)
